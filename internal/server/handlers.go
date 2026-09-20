@@ -18,9 +18,10 @@ import (
 // ---------------------------------------------------------------- auth
 
 type registerRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	FullName string `json:"full_name"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 // handleRegister creates a user account. It does not log them in.
@@ -34,7 +35,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.identity.Register(r.Context(), req.Email, req.Password, req.FullName)
+	user, err := s.identity.Register(r.Context(), req.Email, req.Password, req.FirstName, req.LastName)
 	if err != nil {
 		s.errors.handle(w, r, err)
 		return
@@ -293,9 +294,10 @@ func (s *Server) handleRevokeInvitation(w http.ResponseWriter, r *http.Request) 
 }
 
 type acceptInvitationRequest struct {
-	Token    string `json:"token"`
-	Password string `json:"password"`
-	FullName string `json:"full_name"`
+	Token     string `json:"token"`
+	Password  string `json:"password"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 // handleAcceptInvitation creates the invitee's account, with the invited role
@@ -311,7 +313,7 @@ func (s *Server) handleAcceptInvitation(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user, err := s.identity.AcceptInvitation(r.Context(), req.Token, req.Password, req.FullName)
+	user, err := s.identity.AcceptInvitation(r.Context(), req.Token, req.Password, req.FirstName, req.LastName)
 	if err != nil {
 		s.errors.handle(w, r, err)
 		return

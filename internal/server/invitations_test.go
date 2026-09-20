@@ -22,7 +22,7 @@ func TestInviteAcceptFlowOverHTTP(t *testing.T) {
 	token := tokenFromLink(t, msg.Body)
 
 	rec = h.req(http.MethodPost, "/api/v1/invitations/accept", "", map[string]string{
-		"token": token, "password": testPassword, "full_name": "Invitee",
+		"token": token, "password": testPassword, "first_name": "Invitee", "last_name": "",
 	})
 	mustStatus(t, rec, http.StatusCreated)
 

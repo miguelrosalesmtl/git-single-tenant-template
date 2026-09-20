@@ -10,7 +10,7 @@ func TestPasswordResetFlow(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	user, err := svc.Register(ctx, "reset@example.com", testPassword, "")
+	user, err := svc.Register(ctx, "reset@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -61,7 +61,7 @@ func TestPasswordResetNeverDisclosesWhetherTheAccountExists(t *testing.T) {
 		t.Errorf("unknown email returned an error: %v", err)
 	}
 
-	if _, err := svc.Register(ctx, "real@example.com", testPassword, ""); err != nil {
+	if _, err := svc.Register(ctx, "real@example.com", testPassword, "", ""); err != nil {
 		t.Fatalf("register: %v", err)
 	}
 	if err := svc.RequestPasswordReset(ctx, "real@example.com", RequestMeta{}); err != nil {

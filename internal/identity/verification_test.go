@@ -10,7 +10,7 @@ func TestEmailVerificationFlow(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	user, err := svc.Register(ctx, "verify@example.com", testPassword, "")
+	user, err := svc.Register(ctx, "verify@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -39,7 +39,7 @@ func TestResendVerification(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	user, err := svc.Register(ctx, "resend@example.com", testPassword, "")
+	user, err := svc.Register(ctx, "resend@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}

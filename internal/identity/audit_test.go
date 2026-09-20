@@ -11,7 +11,7 @@ func TestAuditRecordsSuccessAndFailedLogins(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	user, err := svc.Register(ctx, "alice@example.com", testPassword, "Alice")
+	user, err := svc.Register(ctx, "alice@example.com", testPassword, "Alice", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -73,7 +73,7 @@ func TestAuditKeysetPagination(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	user, err := svc.Register(ctx, "paginate@example.com", testPassword, "")
+	user, err := svc.Register(ctx, "paginate@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}

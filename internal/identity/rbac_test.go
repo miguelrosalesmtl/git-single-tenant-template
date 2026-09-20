@@ -13,7 +13,7 @@ import (
 // use it to get a first administrator into an otherwise-empty installation.
 func makeAdmin(t *testing.T, svc *Service, email string) User {
 	t.Helper()
-	user, err := svc.Register(context.Background(), email, testPassword, "")
+	user, err := svc.Register(context.Background(), email, testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register %s: %v", email, err)
 	}
@@ -62,7 +62,7 @@ func TestEscalationGuardOnCreateRole(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	member, err := svc.Register(ctx, "member@example.com", testPassword, "")
+	member, err := svc.Register(ctx, "member@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -134,7 +134,7 @@ func TestDeleteRoleInUse(t *testing.T) {
 		t.Fatalf("create role: %v", err)
 	}
 
-	holder, err := svc.Register(ctx, "holder@example.com", testPassword, "")
+	holder, err := svc.Register(ctx, "holder@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register holder: %v", err)
 	}
@@ -159,7 +159,7 @@ func TestSetUserRolesEscalationGuard(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	member, err := svc.Register(ctx, "member2@example.com", testPassword, "")
+	member, err := svc.Register(ctx, "member2@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -173,7 +173,7 @@ func TestSetUserRolesEscalationGuard(t *testing.T) {
 	}
 	access := accessFor(t, svc, member)
 
-	target, err := svc.Register(ctx, "target2@example.com", testPassword, "")
+	target, err := svc.Register(ctx, "target2@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register target: %v", err)
 	}
@@ -216,7 +216,7 @@ func TestOnlyAnAdminMayDemoteAnAdmin(t *testing.T) {
 	adminA := makeAdmin(t, svc, "admin-a@example.com")
 	adminB := makeAdmin(t, svc, "admin-b@example.com")
 
-	member, err := svc.Register(ctx, "member3@example.com", testPassword, "")
+	member, err := svc.Register(ctx, "member3@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}

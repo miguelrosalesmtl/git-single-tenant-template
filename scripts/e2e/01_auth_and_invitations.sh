@@ -34,7 +34,7 @@ logs() { ${APP_LOGS:-docker compose logs app} 2>&1; }
 invite_token() { logs | grep -o 'token=mtt_inv_[A-Za-z0-9_-]*' | tail -1 | cut -d= -f2; }
 
 echo "== register =="
-code=$(req POST /auth/register - '{"email":"alice@example.com","password":"correct-horse-battery","full_name":"Alice"}')
+code=$(req POST /auth/register - '{"email":"alice@example.com","password":"correct-horse-battery","first_name":"Alice","last_name":""}')
 check "register alice" 201 "$code"
 check "no password hash leaked" "null" "$(jq -r '.password_hash // "null"' /tmp/body)"
 check "not verified yet" "null" "$(jq -r '.email_verified_at // "null"' /tmp/body)"
@@ -44,7 +44,7 @@ check "duplicate email -> 409" 409 "$code"
 code=$(req POST /auth/register - '{"email":"x@example.com","password":"short"}')
 check "short password -> 400" 400 "$code"
 
-code=$(req POST /auth/register - '{"email":"bob@example.com","password":"correct-horse-battery","full_name":"Bob"}')
+code=$(req POST /auth/register - '{"email":"bob@example.com","password":"correct-horse-battery","first_name":"Bob","last_name":""}')
 check "register bob" 201 "$code"
 
 echo "== login =="
@@ -88,7 +88,7 @@ INV=$(invite_token)
 [ -n "$INV" ] && { echo "  PASS  ...but it WAS emailed (found in the log)"; pass=$((pass+1)); } \
              || { echo "  FAIL  no invitation email was sent"; fail=$((fail+1)); }
 
-code=$(req POST /invitations/accept - "{\"token\":\"$INV\",\"password\":\"correct-horse-battery\",\"full_name\":\"Carol\"}")
+code=$(req POST /invitations/accept - "{\"token\":\"$INV\",\"password\":\"correct-horse-battery\",\"first_name\":\"Carol\",\"last_name\":\"\"}")
 check "carol accepts and her account is created" 201 "$code"
 check "carol's email arrived pre-verified (the token proved control)" \
   "not-null" "$([ "$(jq -r '.email_verified_at' /tmp/body)" != "null" ] && echo not-null || echo null)"

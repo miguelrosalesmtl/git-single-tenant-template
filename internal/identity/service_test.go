@@ -14,7 +14,7 @@ func TestRegisterAndLogin(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	user, err := svc.Register(ctx, "Alice@Example.com", testPassword, "Alice")
+	user, err := svc.Register(ctx, "Alice@Example.com", testPassword, "Alice", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -26,7 +26,7 @@ func TestRegisterAndLogin(t *testing.T) {
 	}
 
 	// Registering the same email again is a conflict, not a silent success.
-	if _, err := svc.Register(ctx, "alice@example.com", testPassword, "Alice Two"); !errors.Is(err, ErrEmailTaken) {
+	if _, err := svc.Register(ctx, "alice@example.com", testPassword, "Alice", "Two"); !errors.Is(err, ErrEmailTaken) {
 		t.Errorf("duplicate register error = %v, want ErrEmailTaken", err)
 	}
 
@@ -68,10 +68,10 @@ func TestRegisterValidation(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	if _, err := svc.Register(ctx, "not-an-email", testPassword, ""); !errors.Is(err, ErrValidation) {
+	if _, err := svc.Register(ctx, "not-an-email", testPassword, "", ""); !errors.Is(err, ErrValidation) {
 		t.Errorf("bad email error = %v, want ErrValidation", err)
 	}
-	if _, err := svc.Register(ctx, "alice@example.com", "short", ""); !errors.Is(err, ErrValidation) {
+	if _, err := svc.Register(ctx, "alice@example.com", "short", "", ""); !errors.Is(err, ErrValidation) {
 		t.Errorf("short password error = %v, want ErrValidation", err)
 	}
 }
@@ -80,7 +80,7 @@ func TestChangePasswordRevokesEverySession(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	user, err := svc.Register(ctx, "bob@example.com", testPassword, "Bob")
+	user, err := svc.Register(ctx, "bob@example.com", testPassword, "Bob", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -112,11 +112,11 @@ func TestRevokeSessionIsScopedToOwner(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	alice, err := svc.Register(ctx, "alice2@example.com", testPassword, "Alice")
+	alice, err := svc.Register(ctx, "alice2@example.com", testPassword, "Alice", "")
 	if err != nil {
 		t.Fatalf("register alice: %v", err)
 	}
-	if _, err := svc.Register(ctx, "carol@example.com", testPassword, "Carol"); err != nil {
+	if _, err := svc.Register(ctx, "carol@example.com", testPassword, "Carol", ""); err != nil {
 		t.Fatalf("register carol: %v", err)
 	}
 	carol, err := svc.repo.GetUserByEmail(ctx, "carol@example.com")
@@ -142,7 +142,7 @@ func TestSuperuserBypassesRBACEntirely(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	user, err := svc.Register(ctx, "root@example.com", testPassword, "Root")
+	user, err := svc.Register(ctx, "root@example.com", testPassword, "Root", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -185,11 +185,11 @@ func TestSetUserActive(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	admin, err := svc.Register(ctx, "admin@example.com", testPassword, "Admin")
+	admin, err := svc.Register(ctx, "admin@example.com", testPassword, "Admin", "")
 	if err != nil {
 		t.Fatalf("register admin: %v", err)
 	}
-	target, err := svc.Register(ctx, "target@example.com", testPassword, "Target")
+	target, err := svc.Register(ctx, "target@example.com", testPassword, "Target", "")
 	if err != nil {
 		t.Fatalf("register target: %v", err)
 	}
@@ -229,7 +229,7 @@ func TestListUsersPagination(t *testing.T) {
 	ctx := context.Background()
 
 	for _, email := range []string{"one@example.com", "two@example.com", "three@example.com"} {
-		if _, err := svc.Register(ctx, email, testPassword, ""); err != nil {
+		if _, err := svc.Register(ctx, email, testPassword, "", ""); err != nil {
 			t.Fatalf("register %s: %v", email, err)
 		}
 	}

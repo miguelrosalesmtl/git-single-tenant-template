@@ -58,9 +58,10 @@ const (
 
 // User is an account in this installation.
 type User struct {
-	ID       uuid.UUID `json:"id"`
-	Email    string    `json:"email"`
-	FullName string    `json:"full_name"`
+	ID        uuid.UUID `json:"id"`
+	Email     string    `json:"email"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
 
 	// IsSuperuser is the only privilege that outranks RBAC entirely: it holds every
 	// permission in the catalog regardless of which roles the account holds, and it

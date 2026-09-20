@@ -67,7 +67,7 @@ type RequestMeta struct {
 // ---------------------------------------------------------------- registration
 
 // Register creates a user account.
-func (s *Service) Register(ctx context.Context, email, password, fullName string) (User, error) {
+func (s *Service) Register(ctx context.Context, email, password, firstName, lastName string) (User, error) {
 	email, err := normalizeEmail(email)
 	if err != nil {
 		return User{}, err
@@ -85,7 +85,7 @@ func (s *Service) Register(ctx context.Context, email, password, fullName string
 	err = database.InTx(ctx, s.pool, func(db database.DB) error {
 		repo := NewRepository(db)
 
-		user, err = repo.CreateUser(ctx, email, hash, strings.TrimSpace(fullName))
+		user, err = repo.CreateUser(ctx, email, hash, strings.TrimSpace(firstName), strings.TrimSpace(lastName))
 		if err != nil {
 			return err
 		}
@@ -643,7 +643,7 @@ func (s *Service) RevokeInvitation(ctx context.Context, actor User, invitationID
 // Redeeming the token IS proof of control of the mailbox it was emailed to, so
 // the new account is created already email-verified -- asking for a second
 // confirmation would be theatre.
-func (s *Service) AcceptInvitation(ctx context.Context, token, password, fullName string) (User, error) {
+func (s *Service) AcceptInvitation(ctx context.Context, token, password, firstName, lastName string) (User, error) {
 	if err := s.validatePassword(password); err != nil {
 		return User{}, err
 	}
@@ -674,7 +674,7 @@ func (s *Service) AcceptInvitation(ctx context.Context, token, password, fullNam
 			return err
 		}
 
-		user, err = repo.CreateUser(ctx, inv.Email, hash, strings.TrimSpace(fullName))
+		user, err = repo.CreateUser(ctx, inv.Email, hash, strings.TrimSpace(firstName), strings.TrimSpace(lastName))
 		if err != nil {
 			return err
 		}

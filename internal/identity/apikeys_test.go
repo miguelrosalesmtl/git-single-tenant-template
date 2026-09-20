@@ -55,7 +55,7 @@ func TestAPIKeyEscalationGuard(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	member, err := svc.Register(ctx, "member@example.com", testPassword, "")
+	member, err := svc.Register(ctx, "member@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}

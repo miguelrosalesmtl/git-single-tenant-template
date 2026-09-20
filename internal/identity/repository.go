@@ -41,28 +41,28 @@ const sessionTouchInterval = `interval '5 minutes'`
 
 // ---------------------------------------------------------------- users
 
-const userColumns = `id, email, password_hash, full_name, is_superuser, is_active, email_verified_at, created_at, updated_at`
+const userColumns = `id, email, password_hash, first_name, last_name, is_superuser, is_active, email_verified_at, created_at, updated_at`
 
 // qualifiedUserColumns is userColumns with every name prefixed by its table. Use
 // it in any query that joins users against something else that also has an "id",
 // "created_at", or "updated_at" column. Without the prefix Postgres rejects the
 // query as ambiguous.
-const qualifiedUserColumns = `users.id, users.email, users.password_hash, users.full_name,
+const qualifiedUserColumns = `users.id, users.email, users.password_hash, users.first_name, users.last_name,
 	users.is_superuser, users.is_active, users.email_verified_at, users.created_at, users.updated_at`
 
 // CreateUser inserts a user. passwordHash may be empty for an SSO-only account,
 // in which case the column is NULL and password login is impossible for them.
-func (r *Repository) CreateUser(ctx context.Context, email, passwordHash, fullName string) (User, error) {
+func (r *Repository) CreateUser(ctx context.Context, email, passwordHash, firstName, lastName string) (User, error) {
 	var hash *string
 	if passwordHash != "" {
 		hash = &passwordHash
 	}
 
 	row := r.db.QueryRow(ctx,
-		`INSERT INTO users (email, password_hash, full_name)
-		 VALUES ($1, $2, $3)
+		`INSERT INTO users (email, password_hash, first_name, last_name)
+		 VALUES ($1, $2, $3, $4)
 		 RETURNING `+userColumns,
-		email, hash, fullName,
+		email, hash, firstName, lastName,
 	)
 
 	u, err := scanUser(row)
@@ -183,7 +183,7 @@ func (r *Repository) ListUsers(ctx context.Context, before uuid.UUID, limit int)
 			perm               *Permission
 		)
 		if err := rows.Scan(
-			&u.ID, &u.Email, &hash, &u.FullName, &u.IsSuperuser, &u.IsActive, &u.EmailVerifiedAt,
+			&u.ID, &u.Email, &hash, &u.FirstName, &u.LastName, &u.IsSuperuser, &u.IsActive, &u.EmailVerifiedAt,
 			&u.CreatedAt, &u.UpdatedAt,
 			&roleID, &roleKey, &roleName, &isSystem, &rCreated, &rUpdated, &perm,
 		); err != nil {
@@ -308,7 +308,7 @@ func (r *Repository) AuthenticateSession(ctx context.Context, tokenHash []byte) 
 	var s Session
 	var ip *netip.Addr
 	err := row.Scan(
-		&u.ID, &u.Email, &hash, &u.FullName, &u.IsSuperuser, &u.IsActive, &u.EmailVerifiedAt,
+		&u.ID, &u.Email, &hash, &u.FirstName, &u.LastName, &u.IsSuperuser, &u.IsActive, &u.EmailVerifiedAt,
 		&u.CreatedAt, &u.UpdatedAt,
 		&s.ID, &s.UserID, &s.ExpiresAt, &s.RevokedAt, &s.UserAgent, &ip, &s.LastUsedAt, &s.CreatedAt,
 	)
@@ -716,7 +716,7 @@ type row interface {
 func scanUser(r row) (User, error) {
 	var u User
 	var hash *string // NULL for SSO-only accounts
-	err := r.Scan(&u.ID, &u.Email, &hash, &u.FullName, &u.IsSuperuser, &u.IsActive,
+	err := r.Scan(&u.ID, &u.Email, &hash, &u.FirstName, &u.LastName, &u.IsSuperuser, &u.IsActive,
 		&u.EmailVerifiedAt, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		return User{}, err

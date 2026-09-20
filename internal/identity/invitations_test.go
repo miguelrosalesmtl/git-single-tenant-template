@@ -25,7 +25,7 @@ func TestInviteAndAccept(t *testing.T) {
 	msg := testMailer.lastTo(t, "new.invitee@example.com")
 	token := tokenFromLink(t, msg.Body)
 
-	user, err := svc.AcceptInvitation(ctx, token, testPassword, "New Invitee")
+	user, err := svc.AcceptInvitation(ctx, token, testPassword, "New", "Invitee")
 	if err != nil {
 		t.Fatalf("accept invitation: %v", err)
 	}
@@ -51,7 +51,7 @@ func TestInviteAndAccept(t *testing.T) {
 	}
 
 	// The token is single-use.
-	if _, err := svc.AcceptInvitation(ctx, token, testPassword, "Again"); !errors.Is(err, ErrInvitationInvalid) {
+	if _, err := svc.AcceptInvitation(ctx, token, testPassword, "Again", ""); !errors.Is(err, ErrInvitationInvalid) {
 		t.Errorf("reuse invitation token: err = %v, want ErrInvitationInvalid", err)
 	}
 }
@@ -64,7 +64,7 @@ func TestInviteRefusesAnAlreadyRegisteredEmail(t *testing.T) {
 	access := accessFor(t, svc, admin)
 	memberRoleID := systemRoleID(t, svc, RoleKeyMember)
 
-	if _, err := svc.Register(ctx, "existing@example.com", testPassword, ""); err != nil {
+	if _, err := svc.Register(ctx, "existing@example.com", testPassword, "", ""); err != nil {
 		t.Fatalf("register: %v", err)
 	}
 
@@ -78,7 +78,7 @@ func TestInviteEscalationGuard(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	member, err := svc.Register(ctx, "member@example.com", testPassword, "")
+	member, err := svc.Register(ctx, "member@example.com", testPassword, "", "")
 	if err != nil {
 		t.Fatalf("register: %v", err)
 	}
@@ -125,7 +125,7 @@ func TestReInviteReplacesThePendingInvitation(t *testing.T) {
 	}
 
 	// The first link no longer works.
-	if _, err := svc.AcceptInvitation(ctx, firstToken, testPassword, ""); !errors.Is(err, ErrInvitationInvalid) {
+	if _, err := svc.AcceptInvitation(ctx, firstToken, testPassword, "", ""); !errors.Is(err, ErrInvitationInvalid) {
 		t.Errorf("old invitation link still valid: err = %v", err)
 	}
 }
@@ -148,7 +148,7 @@ func TestRevokeInvitation(t *testing.T) {
 	if err := svc.RevokeInvitation(ctx, admin, inv.ID); err != nil {
 		t.Fatalf("revoke: %v", err)
 	}
-	if _, err := svc.AcceptInvitation(ctx, token, testPassword, ""); !errors.Is(err, ErrInvitationInvalid) {
+	if _, err := svc.AcceptInvitation(ctx, token, testPassword, "", ""); !errors.Is(err, ErrInvitationInvalid) {
 		t.Errorf("accept a revoked invitation: err = %v, want ErrInvitationInvalid", err)
 	}
 }
@@ -157,7 +157,7 @@ func TestAcceptInvitationBadToken(t *testing.T) {
 	svc := newTestService(t)
 	ctx := context.Background()
 
-	if _, err := svc.AcceptInvitation(ctx, "not-a-real-token", testPassword, ""); !errors.Is(err, ErrInvitationInvalid) {
+	if _, err := svc.AcceptInvitation(ctx, "not-a-real-token", testPassword, "", ""); !errors.Is(err, ErrInvitationInvalid) {
 		t.Errorf("bad token error = %v, want ErrInvitationInvalid", err)
 	}
 }
