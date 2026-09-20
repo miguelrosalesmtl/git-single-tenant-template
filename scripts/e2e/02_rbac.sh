@@ -50,12 +50,23 @@ code=$(req POST /roles "$ALICE" '{"key":"auditor","name":"Auditor","permissions"
 check "admin creates a custom role" 201 "$code"
 AUDITOR_ID=$(jqr .id)
 
+# To exercise the ESCALATION guard specifically (as opposed to a plain missing-
+# permission 403), bob first needs roles.create himself -- otherwise the
+# permission middleware rejects him before the service ever runs
+# checkEscalation.
+code=$(req POST /roles "$ALICE" '{"key":"role_editor","name":"Role Editor","permissions":["roles.create","roles.read"]}')
+check "admin creates a role_editor role" 201 "$code"
+ROLE_EDITOR_ID=$(jqr .id)
+code=$(req PUT "/users/$BOB_ID/roles" "$ALICE" "{\"role_ids\":[\"$MEMBER_ID\",\"$ROLE_EDITOR_ID\"]}")
+check "admin grants bob member + role_editor" 204 "$code"
+BOB=$(login bob@example.com)
+
 code=$(req POST /roles "$BOB" '{"key":"sneaky","name":"Sneaky","permissions":["users.read","users.update"]}')
-check "member minting a role beyond their own permissions -> 403" 403 "$code"
+check "bob (holds roles.create, not users.update) minting a role beyond his own permissions -> 403" 403 "$code"
 echo "  INFO  $(jqr .error)"
 
 code=$(req PUT "/users/$BOB_ID/roles" "$ALICE" "{\"role_ids\":[\"$MEMBER_ID\",\"$AUDITOR_ID\"]}")
-check "admin grants bob member + auditor" 204 "$code"
+check "admin grants bob member + auditor instead" 204 "$code"
 code=$(req GET /audit "$BOB")
 check "bob (member+auditor) can now read the audit log" 200 "$code"
 
@@ -80,7 +91,8 @@ ALICE_ID=$(req GET /auth/me "$ALICE" >/dev/null; jqr .id)
 
 req GET /permissions - >/dev/null
 ALL_PERMS=$(jq -c '[.permissions[].key]' /tmp/body)
-GODMODE_ID=$(req POST /roles "$ALICE" "{\"key\":\"god_mode\",\"name\":\"God Mode\",\"permissions\":$ALL_PERMS}"; jqr .id)
+req POST /roles "$ALICE" "{\"key\":\"god_mode\",\"name\":\"God Mode\",\"permissions\":$ALL_PERMS}" >/dev/null
+GODMODE_ID=$(jqr .id)
 code=$(req PUT "/users/$BOB_ID/roles" "$ALICE" "{\"role_ids\":[\"$MEMBER_ID\",\"$GODMODE_ID\"]}")
 check "bob is granted every permission there is" 204 "$code"
 BOB=$(login bob@example.com)

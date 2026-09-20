@@ -64,15 +64,27 @@ func TestCreateRoleEscalationGuardOverHTTP(t *testing.T) {
 	adminToken, _ := h.registerAndLogin("admin@example.com")
 	h.makeAdmin("admin@example.com")
 
-	memberRoleID := h.roleID(adminToken, "member")
+	// The actor must hold roles.create themselves, or requirePermission
+	// rejects them before the service's escalation guard ever runs -- that
+	// would be testing the wrong 403. A role holding roles.create but not
+	// users.update isolates the guard we actually want to exercise.
+	rec := h.req(http.MethodPost, "/api/v1/roles", adminToken, map[string]any{
+		"key": "role_editor", "name": "Role Editor", "permissions": []string{"roles.create"},
+	})
+	mustStatus(t, rec, http.StatusCreated)
+	var editorRole struct {
+		ID string `json:"id"`
+	}
+	decodeBody(t, rec, &editorRole)
+
 	mustStatus(t,
 		h.req(http.MethodPut, "/api/v1/users/"+targetID.String()+"/roles", adminToken,
-			map[string]any{"role_ids": []string{memberRoleID.String()}}),
+			map[string]any{"role_ids": []string{editorRole.ID}}),
 		http.StatusNoContent)
 
-	// A plain member holds only users.read, and cannot mint a role that also
-	// grants users.update.
-	rec := h.req(http.MethodPost, "/api/v1/roles", token, map[string]any{
+	// The actor holds roles.create but not users.update, and cannot mint a
+	// role that grants users.update.
+	rec = h.req(http.MethodPost, "/api/v1/roles", token, map[string]any{
 		"key": "sneaky", "name": "Sneaky", "permissions": []string{"users.read", "users.update"},
 	})
 	mustStatus(t, rec, http.StatusForbidden)

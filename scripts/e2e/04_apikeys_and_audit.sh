@@ -44,8 +44,19 @@ check "the key authenticates like a session, with its own scope" 200 "$code"
 code=$(req GET /auth/me "$TOKEN")
 check "a key cannot reach account-management endpoints" 403 "$code"
 
+# Give plain JUST enough to reach the handler (apikeys.create), so the 403 that
+# follows comes from the ESCALATION guard in the service, not the permission
+# middleware refusing them outright.
+code=$(req POST /roles "$ADMIN" '{"key":"key_minter","name":"Key Minter","permissions":["apikeys.create","apikeys.read"]}')
+check "admin creates a key_minter role" 201 "$code"
+KEY_MINTER_ID=$(jqr .id)
+PLAIN_ID=$(req GET /auth/me "$PLAIN" >/dev/null; jqr .id)
+code=$(req PUT "/users/$PLAIN_ID/roles" "$ADMIN" "{\"role_ids\":[\"$KEY_MINTER_ID\"]}")
+check "admin grants plain the key_minter role" 204 "$code"
+PLAIN=$(login plain@example.com)
+
 code=$(req POST /api-keys "$PLAIN" '{"name":"too powerful","permissions":["users.read","users.update"]}')
-check "minting a key beyond own permissions -> 403" 403 "$code"
+check "minting a key beyond own permissions -> 403 (escalation, not a missing base permission)" 403 "$code"
 
 code=$(req DELETE "/api-keys/$KEY_ID" "$ADMIN")
 check "revoke the key" 204 "$code"

@@ -42,6 +42,12 @@ linters:
       - path: internal/auth/token\.go
         text: "G101"
 
+      # Same false positive, tripped by the column list containing the literal
+      # word "token_prefix" -- a column NAME, not a credential. Nothing here is
+      # a secret; it's a SELECT/RETURNING column list.
+      - path: internal/identity/apikeys_repository\.go
+        text: "G101"
+
       # gosec G115 flags int -> uint32 on len(hash). A password/argon2 hash length
       # is a tiny constant; it cannot overflow uint32.
       - path: internal/auth/password\.go

@@ -366,11 +366,13 @@ func (s *Service) SetUserActive(ctx context.Context, actor User, targetUserID uu
 	err := database.InTx(ctx, s.pool, func(db database.DB) error {
 		repo := NewRepository(db)
 
-		if !isActive {
-			// Deactivating the last admin would leave the installation
-			// unadministrable through the ordinary API -- nobody could grant
-			// roles, invite anyone, or manage anyone else. (The superuser CLI
-			// escape hatch is unaffected by this guard.)
+		// Deactivating the last admin would leave the installation
+		// unadministrable through the ordinary API -- nobody could grant roles,
+		// invite anyone, or manage anyone else. A superuser is exempt: they
+		// already outrank this check entirely, and blocking them here would
+		// only get in the way of the one account guaranteed to be able to fix
+		// things (compare SetUserRoles' identical exemption for ViaSuperuser).
+		if !isActive && !actor.IsSuperuser {
 			targetRoles, err := repo.LoadUserRoles(ctx, targetUserID)
 			if err != nil {
 				return err
